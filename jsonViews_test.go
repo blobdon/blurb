@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-func TestBuildJSONViews(t *testing.T) {
+// Test whether json from type book can be unmarshalled into bookView
+func TestBookToBookView(t *testing.T) {
 	ra := map[string]interface{}{}
 	ra["Other Author"] = struct{}{}
 	bv := bookView{}
