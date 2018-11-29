@@ -38,3 +38,11 @@ func fileToMap(filename string) (map[string]struct{}, error) {
 	}
 	return m, json.Unmarshal(j, &m)
 }
+
+func structToFile(i interface{}, filename string) error {
+	j, err := json.Marshal(i)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, j, 0666)
+}

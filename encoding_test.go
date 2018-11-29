@@ -35,7 +35,36 @@ func TestBookJSON(t *testing.T) {
 	if endbook.Title != startbook.Title {
 		t.Errorf("endbook != startbook\n wanted %q got %q\nError: %q", startbook, endbook, err)
 	}
+}
+func TestStructJSON(t *testing.T) {
+	tmpfile, err := ioutil.TempFile("/Users/blobdon/blurbdata/test", "testbook*.json")
+	if err != nil {
+		t.Errorf("create tempfile: %s", err)
+	}
 
+	tmpfilename := tmpfile.Name()
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	tmpfile.Close()
+	if err != nil {
+		t.Errorf("close tempfile: %s", err)
+	}
+
+	err = structToFile(startbook, tmpfilename)
+	if err != nil {
+		t.Errorf("book to json file: %s", err)
+	}
+
+	endbook := book{}
+	endbook, err = fileToBook(tmpfilename)
+	if err != nil {
+		t.Errorf("book from json file: %s", err)
+	}
+
+	// TODO replace this with test for incomparable types
+	if endbook.Title != startbook.Title {
+		t.Errorf("endbook != startbook\n wanted %q got %q\nError: %q", startbook, endbook, err)
+	}
 }
 func TestMapJSON(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("/Users/blobdon/blurbdata/test", "testmap*.json")
