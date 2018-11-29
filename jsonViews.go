@@ -4,13 +4,13 @@ type bookView struct {
 	ISBN13        string
 	Title         string
 	Author        string
-	ReviewAuthors map[string]string //[name]=blankfornow
+	ReviewAuthors map[string]interface{} //[name]=blankfornow
 }
 
 type authorView struct {
 	Name          string
-	BooksAuthored map[string]string // [ISBN]=title
-	BooksReviewed map[string]string // [ISBN]=title
+	BooksAuthored map[string]interface{} // [ISBN]=title
+	BooksReviewed map[string]interface{} // [ISBN]=title
 }
 
 // buildJSONViews will build a json directory, at dirpath, of the
