@@ -67,9 +67,10 @@ func buildJSONViews(db *bolt.DB, dirpath string) error {
 		}
 		// copy book details to bookview
 		bv := bookView{
-			Title:  b.Title,
-			ISBN13: b.ISBN13,
-			Author: b.Author,
+			Title:     b.Title,
+			ISBN13:    b.ISBN13,
+			Author:    b.Author,
+			ReviewsIn: []review{},
 		}
 
 		// For each reviewer
