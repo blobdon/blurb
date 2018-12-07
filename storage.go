@@ -58,15 +58,3 @@ func bookFromBolt(isbn13 string, db *bolt.DB) (book, error) {
 	})
 	return b, err
 }
-
-// bookViewFromBolt gets a bookView from bolt, using the stored book keyed by ISBN13
-// this is possible because bookview is an assignable subset of fields of book
-func bookViewFromBolt(isbn13 string, db *bolt.DB) (bookView, error) {
-	bv := bookView{}
-	err := db.View(func(tx *bolt.Tx) error {
-		bkt := tx.Bucket([]byte("books"))
-		j := bkt.Get([]byte(isbn13))
-		return json.Unmarshal(j, &bv)
-	})
-	return bv, err
-}
