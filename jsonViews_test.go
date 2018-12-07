@@ -30,6 +30,7 @@ func TestBookToBookView(t *testing.T) {
 	fmt.Printf("Book: %v \n BookView: %v \n", b, bv)
 }
 
+// TestBuildJSONViews can currently be used to build test views JSON
 func TestBuildJSONViews(t *testing.T) {
 	// clean test directory
 	dir := "/Users/blobdon/blurbdata/test/views/"

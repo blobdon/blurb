@@ -1,23 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"strings"
 
 	"github.com/boltdb/bolt"
 )
 
+type link struct {
+	Key  string
+	Text string
+}
+
 type bookView struct {
 	ISBN13        string
 	Title         string
 	Author        string
-	ReviewAuthors map[string]interface{} //[name]=blankfornow(formatted for author page url)
+	ReviewAuthors []link // name, blankfornow(formatted for author page url)
 }
 
 type authorView struct {
 	Name          string
-	BooksAuthored map[string]string // [ISBN]=title
-	BooksReviewed map[string]string // [ISBN]=title
+	BooksAuthored []link // isbn, title
+	BooksReviewed []link // isbn, title
 }
 
 // buildJSONViews will build a json directory, at dirpath, of the
@@ -43,7 +49,7 @@ func buildJSONViews(db *bolt.DB, dirpath string) error {
 	// - may benefit from concurrency with large # of views being saved to files, but benchmark first
 	for i := range isbn13Map {
 		// get bookview from bolt, using isbn of book
-		bv := bookView{ReviewAuthors: map[string]interface{}{}}
+		bv := bookView{}
 		bv, err := bookViewFromBolt(i, db)
 		if err != nil {
 			log.Println("Error getting bookview from bolt for isbn ", i, err)
@@ -54,32 +60,25 @@ func buildJSONViews(db *bolt.DB, dirpath string) error {
 			log.Println("Error saving bookview for isbn ", i, err)
 		}
 
-		// If author already in avmap, update with new info, otherwise initialize maps and add new info
-		// Make sure maps are initilised whether author is added to map first as author of reviewer
+		// If author already in avmap, update with new info, otherwise add name and new info
 		// For author
 		if av, ok := avMap[bv.Author]; ok {
-			av.BooksAuthored[bv.ISBN13] = bv.Title
+			av.BooksAuthored = append(av.BooksAuthored, link{bv.ISBN13, bv.Title})
 			avMap[bv.Author] = av
 		} else {
-			// add name and initilize map fields
 			av.Name = bv.Author
-			av.BooksAuthored = map[string]string{}
-			av.BooksReviewed = map[string]string{}
-			av.BooksAuthored[bv.ISBN13] = bv.Title // add book authored
+			av.BooksAuthored = append(av.BooksAuthored, link{bv.ISBN13, bv.Title})
 			avMap[bv.Author] = av
 		}
 		// For each reviewer
-		for ra := range bv.ReviewAuthors {
-			if av, ok := avMap[ra]; ok {
-				av.BooksReviewed[bv.ISBN13] = bv.Title
-				avMap[ra] = av
+		for _, ra := range bv.ReviewAuthors {
+			if av, ok := avMap[ra.Key]; ok {
+				av.BooksReviewed = append(av.BooksReviewed, link{bv.ISBN13, bv.Title})
+				avMap[ra.Key] = av
 			} else {
-				// add name and initilize map fields
-				av.Name = ra
-				av.BooksAuthored = map[string]string{}
-				av.BooksReviewed = map[string]string{}
-				av.BooksReviewed[bv.ISBN13] = bv.Title // add book reviewed
-				avMap[ra] = av
+				av.Name = ra.Key
+				av.BooksReviewed = append(av.BooksReviewed, link{bv.ISBN13, bv.Title})
+				avMap[ra.Key] = av
 			}
 		}
 	}
@@ -102,4 +101,27 @@ func saveBookView(bv bookView, dirpath string) error {
 	// does this filename need to be built using filepath pkg? probably yes
 	filename := dirpath + "books/" + bv.ISBN13 + ".json"
 	return structToFile(bv, filename)
+}
+
+// bookViewFromBolt gets a bookView from bolt, using the stored book keyed by ISBN13
+// this is possible because bookview is an assignable subset of fields of book
+func bookViewFromBolt(isbn13 string, db *bolt.DB) (bookView, error) {
+	b := book{}
+	err := db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket([]byte("books"))
+		j := bkt.Get([]byte(isbn13))
+		return json.Unmarshal(j, &b)
+	})
+
+	// copy book details to bookview
+	bv := bookView{
+		Title:  b.Title,
+		ISBN13: b.ISBN13,
+		Author: b.Author,
+	}
+	for ra := range b.ReviewAuthors {
+		bv.ReviewAuthors = append(bv.ReviewAuthors, link{Key: ra})
+	}
+
+	return bv, err
 }
