@@ -34,6 +34,7 @@ func TestBookToBookView(t *testing.T) {
 func TestBuildJSONViews(t *testing.T) {
 	// clean test directory
 	dir := "/Users/blobdon/blurbdata/test/views/"
+	// dir := "/Users/blobdon/blurbdata/views/"
 	err := os.RemoveAll(dir)
 	if err != nil {
 		t.Fatalf("Failed to clear test views directory: %s", err)
@@ -46,6 +47,7 @@ func TestBuildJSONViews(t *testing.T) {
 	}
 
 	db, err := initBolt("/Users/blobdon/blurbdata/test/test.db")
+	// db, err := initBolt("/Users/blobdon/blurbdata/blurb.db")
 	if err != nil {
 		t.Errorf("Error on init bolt db: %s", err)
 	}
