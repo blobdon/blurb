@@ -17,18 +17,19 @@
 
     <!-- Incoming Reviews -->
     <div id="reviewsIn">
-        <ul id="reviewsInList"></ul>
+        <h3 id="inHead"></h3>
+        <ul id="inList"></ul>
     </div>
     <br>
 
     <!-- Outgoing Reviews, if its an author -->
     <div id="reviewsOut">
-        <ul id="reviewsOutList"></ul>
+        <h3 id="outHead"></h3>
+        <ul id="outList"></ul>
     </div>
     <script>
         var d = document;
         var pn = window.location.pathname;
-        console.log(pn);
         if (pn.startsWith("/books/") || pn.startsWith("/authors/")) {
             jsonUpdate(pn);
         };
@@ -38,28 +39,33 @@
                     return response.json();
                 })
                 .then(function(data) {
-                    if (typeof data.Name !== 'undefined') {
+                    console.log(data);
+                    // If this is and author view
+                    if (data.hasOwnProperty("Name")) {
                         d.getElementById("title").innerText = data.Name;
-                    };
-                    if (typeof data.BooksAuthored !== 'undefined') {
-                        var inList = d.getElementById("reviewsInList")
-                        for (let [i, t] of Object.entries(data.BooksAuthored)) {
-                            a = d.createElement("a");
-                            a.innerText = t;
-                            a.href = "/books/" + i;
-                            var li = d.createElement("li");
-                            inList.appendChild(li).appendChild(a);
-                        };
-                    };
-                    if (typeof data.BooksReviewed !== 'undefined') {
-                        var outList = d.getElementById("reviewsOutList");
-                        for (let [i, t] of Object.entries(data.BooksReviewed)) {
+                        var inHead = d.getElementById("inHead").innerText = "Reviewers of this Author:";
+                        var outHead = d.getElementById("outHead").innerText = "Books Reviewed by this Author:";
+                        var outList = d.getElementById("outList");
+                        for (var i = 0; i < data.ReviewsOut.length; i++) {
                             var a = d.createElement("a");
-                            a.innerText = t;
-                            a.href = "/books/" + i;
+                            a.innerText = data.ReviewsOut[i].Title + " by " + data.ReviewsOut[i].Author;
+                            a.href = "/books/" + data.ReviewsOut[i].ISBN13;
                             var li = d.createElement("li");
                             outList.appendChild(li).appendChild(a);
                         };
+                    }
+                    if (data.hasOwnProperty("Title")) {
+                        d.getElementById("title").innerText = data.Title;
+                        var outHead = d.getElementById("inHead").innerText = "Reviewers of This Book";
+                    }
+                    var inList = d.getElementById("inList")
+                    for (var i = 0; i < data.ReviewsIn.length; i++) {
+                        a = d.createElement("a");
+                        a.innerText = data.ReviewsIn[i].Reviewer;
+                        a.href = "/authors/" + data.ReviewsIn[i].Reviewer.replace(/ /g, '-');
+                        var text = d.createElement("span").innerText = " reviewed " + data.ReviewsIn[i].Title;
+                        var li = d.createElement("li");
+                        inList.appendChild(li).appendChild(a).sib;
                     };
                 })
                 .catch(function(err) {
