@@ -26,6 +26,10 @@ func initBolt(dbfilepath string) (*bolt.DB, error) {
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
+		_, err = tx.CreateBucketIfNotExists([]byte("reviewIndex"))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
 		return nil
 	})
 	if err != nil {
